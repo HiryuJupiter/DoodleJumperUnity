@@ -6,6 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/Flock.unity
-    guid: 2cda990e2423bbf4892e6590ba056729
+    path: Assets/Scenes/MainMenu.unity
+    guid: 3e96ccbb65bf2fd4294a1c3f85b34cd0
+  - enabled: 1
+    path: Assets/Scenes/Gameplay.unity
+    guid: c8dc72e8cd79ea14cbb4db1798ed654a
   m_configObjects: {}

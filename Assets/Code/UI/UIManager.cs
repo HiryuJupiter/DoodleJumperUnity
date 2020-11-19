@@ -1,49 +1,35 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
+using System.Collections;
 
-namespace AIAssignment3
+public class UIManager : MonoBehaviour
 {
-    [RequireComponent(typeof(HUDSpawnButtons))]
-    public class UIManager : MonoBehaviour
+    public static UIManager instance;
+
+    [SerializeField] Text highScore;
+    [SerializeField] GameObject gameOverScreen;
+
+    void Awake()
     {
         //Lazy singleton
-        public static UIManager instance;
+        instance = this;
 
-        //Fields
-        [SerializeField] Text debugText;
-
-        HUDSpawnButtons spawnButtons;
-
-        void Awake()
-        {
-            //Initialize
-            instance = this;
-            spawnButtons = GetComponent<HUDSpawnButtons>();
-            ExitSpawningMode();
-        }
-
-        public void EnterSpawningMode(SpawningMode mode)
-        {
-            //Entering a spawning mode for spawning lifeformes
-            Debug.Log("EnterSpawningMode :" + mode);
-            spawnButtons.RevealButtonBorder(mode);
-            DisplayDebugText("Click and hold left-mouse-button to spawn lifeform!");
-        }
-
-        public void ExitSpawningMode()
-        {
-            //To exit spawning mode, we tell the spawn button manager to hide all borders 
-            spawnButtons.HideButtonBorder();
-            DisplayDebugText("");
-        }
-
-        void DisplayDebugText(string text)
-        {
-            //Erase debug text's text box
-            debugText.text = text;
-        }
-
-
+        //Hide unnecessary elements
+        gameOverScreen.SetActive(false);
     }
 
+    public void GameOver(int currentScore)
+    {
+        //Hide unnecessary elements and show highscore
+        gameOverScreen.SetActive(true);
+
+        //Update score display
+        highScore.text = currentScore.ToString();
+    }
+
+    public void SetCurrentScore (int score)
+    {
+        //Display the highscore with some paddings to the left
+        highScore.text = score.ToString();
+    }
 }
