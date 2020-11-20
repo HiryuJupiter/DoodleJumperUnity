@@ -94,6 +94,7 @@ public class MainMenuManager : MonoBehaviour
 
     void LoadVolumnFromPlayerPrefs ()
     {
+        //Load volumn float from playerprefs and then update volumn slider without the value change callback
         float value = PlayerPrefs.GetFloat(Key_VolumnSliderValue, 1);
         volumnSlider.SetValueWithoutNotify(value);
         SetMixerVolumn(value);

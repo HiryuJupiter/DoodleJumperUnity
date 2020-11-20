@@ -8,7 +8,7 @@ public class CameraTracker : MonoBehaviour
 
     //Reference
     Transform character;
-    new Transform camera;
+    Transform camera;
 
     //Status
     float highestCharacterY;
@@ -44,6 +44,7 @@ public class CameraTracker : MonoBehaviour
 
     void UpdateHighestCharacterPosition()
     {
+        //Constantly check if the player has reached a new highest point
         if (character.position.y > highestCharacterY)
         {
             highestCharacterY = character.position.y;
@@ -53,6 +54,7 @@ public class CameraTracker : MonoBehaviour
 
     public void SetCameraPositionY(float y)
     {
+        //Move the camera along with the player's upward movement
         camera.position = new Vector3(0f, y, camera.position.z);
     }
 }

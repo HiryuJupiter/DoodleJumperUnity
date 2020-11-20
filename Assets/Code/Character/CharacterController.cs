@@ -33,6 +33,7 @@ public class CharacterController : MonoBehaviour
     #region Monobehavior
     void Awake()
     {
+        //Lazy singleton
         Instance = this;
     }
 
@@ -52,20 +53,18 @@ public class CharacterController : MonoBehaviour
 
     void Update()
     {
+        //Only allow control when game is not lost
         if (!isGameLost)
         {
             HorizontalInputUpdate();
-            
-            
         }
     }
 
     void FixedUpdate()
     {
-        ApplyGravity();
-
         if (!isGameLost)
         {
+            ApplyGravity();
             CheckIfFallenToDeath();
             ExecuteMovement();
         }
@@ -73,10 +72,11 @@ public class CharacterController : MonoBehaviour
 
     void OnTriggerStay2D(Collider2D collider)
     {
+        //If we hit a platform trigger while falling, do jump and destroy the platform.
         if (Falling && HitsPlatformCollider(collider))
         {
             Jump();
-            animator.Lands();
+            animator.PlayLanding();
             collider.GetComponent<Platform>().Destroy();
         }
     }
@@ -84,6 +84,7 @@ public class CharacterController : MonoBehaviour
 
     void CheckIfFallenToDeath()
     {
+        //If character falls below screen, game's over.
         if (transform.position.y < cam.BottomOfScreen)
         {
             isGameLost = true;
@@ -93,15 +94,17 @@ public class CharacterController : MonoBehaviour
 
     void HorizontalInputUpdate()
     {
+        //Use a lerp on character movement to add a bit of challenge.
         velocity.x = Mathf.Lerp(velocity.x, input.MoveX * xMoveSpeed, xAcceleration * Time.deltaTime);
 
-        //Set facing
+        //Set facing based on input.
         if (input.MoveX != 0)
         {
             animator.SetFacing(input.MoveX > 0);
         }
     }
 
+    //Expression body methods for self documenting code
     void Jump() => velocity.y = jumpForce;
     void ApplyGravity() => velocity.y -= gravity * Time.deltaTime;
     void ExecuteMovement() => rb.velocity = velocity;

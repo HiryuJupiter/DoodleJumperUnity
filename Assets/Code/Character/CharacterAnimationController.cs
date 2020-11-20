@@ -22,16 +22,19 @@ public class CharacterAnimationController : MonoBehaviour
 
     public void SetFacing (bool faceRight)
     {
+        //Set facing by flipping the scale
         transform.localScale = faceRight ? scaleFaceRight : scaleFaceLeft;
     }
 
-    public void Lands ()
+    public void PlayLanding ()
     {
+        //A simple coroutine for basic jumping animation
         StartCoroutine(PlayLandAnimation());
     }
 
     IEnumerator PlayLandAnimation ()
     {
+        //Give the character a squat pose and then switch back to jump pose
         sr.sprite = squatPose;
         yield return new WaitForSeconds(0.2f);
         sr.sprite = normalPose;

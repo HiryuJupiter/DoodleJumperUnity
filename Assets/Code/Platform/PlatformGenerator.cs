@@ -25,13 +25,13 @@ public class PlatformGenerator : MonoBehaviour
 
     //Properties
     float RandomInterval => Random.Range(spawnIntervalMin, spawnIntervalMax);
-    float CharacterPosY => character.position.y;
 
     //Getter method
     Vector2 GetSpawnPoint(float posY) => new Vector2(Random.Range(xBoundLeft, xBoundRight), posY);
 
     void Awake()
     {
+        //Lazy singleton
         Instance = this;
     }
 
@@ -47,6 +47,8 @@ public class PlatformGenerator : MonoBehaviour
 
     void Update()
     {
+        //When top of screen is above the next supposed platform spawn point, spawn a 
+        //... new platform and increment the next platform spawn point.
         if (cam.TopOfScreen > nextSpawnPosY)
         {
             nextSpawnPosY += RandomInterval;
@@ -56,25 +58,11 @@ public class PlatformGenerator : MonoBehaviour
 
     public void RemovePlatform(GameObject p)
     {
+        //Move the platform from the active list to the inactive list and hide it.
         active.Remove(p);
         p.SetActive(false);
         inactive.Add(p);
     }
-
-    //void GameStartInitialGeneration ()
-    //{
-    //    //Fill the screen with platforms between the character and top of the screen
-    //    float y = cam.BottomOfScreen;
-    //    float top = cam.TopOfScreen;
-    //    while (y < top)
-    //    {
-    //        y += RandomInterval;
-    //        SpawnAtPosition(RandomSpawnPoint(y));
-    //    }
-
-    //    //Set the next spawn Y position
-    //    nextSpawnPosY = y + RandomInterval;
-    //}
 
     void SpawnAtPosition(Vector2 pos)
     {

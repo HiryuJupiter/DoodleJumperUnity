@@ -26,6 +26,7 @@ public class GameplaySceneManager : MonoBehaviour
 
     void Start()
     {
+        //Reference
         ui = UIManager.instance;
         cam = CameraTracker.Instance;
         character = CharacterController.Instance.transform;
@@ -33,30 +34,38 @@ public class GameplaySceneManager : MonoBehaviour
 
     void Update()
     {
+        //Constantly check if character has reached a higher position
         UpdateHighestCharacterPosition();
     }
     #endregion
 
-    public void GameLost ()
+    #region Public 
+    public void GameLost()
     {
+        //When being told that the game has lost, tell UI Manager to show game over screen
         ui.GameOver((int)highestCharacterY);
 
+        //Update highscore if we've broken previous highscore
         if (highestCharacterY > CurrentHighscore)
         {
             HighScore.SaveHighscore((int)highestCharacterY);
         }
     }
 
-    public void ReturnToMainMenu ()
+    public void ReturnToMainMenu()
     {
+        //Load main menu scene
         SceneManager.LoadScene(SceneIndex_MainMenu);
     }
 
-    public void ReplayGame ()
+    public void ReplayGame()
     {
+        //Load current scene
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
+    #endregion
 
+    #region Private 
     int CurrentHighscore => HighScore.LoadHighScore();
 
     void UpdateHighestCharacterPosition()
@@ -69,4 +78,5 @@ public class GameplaySceneManager : MonoBehaviour
             cam.SetCameraPositionY(highestCharacterY);
         }
     }
+    #endregion
 }

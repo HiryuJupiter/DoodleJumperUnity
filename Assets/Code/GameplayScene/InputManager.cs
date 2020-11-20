@@ -25,6 +25,7 @@ public class InputManager : MonoBehaviour
 
     void UpdateMovement ()
     {
+        //Checking horizontal input. 
         if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow))
         {
             MoveX = -1;
