@@ -29,7 +29,7 @@ public class CameraTracker : MonoBehaviour
     void Start()
     {
         //Reference
-        character = CharacterController.Instance.transform;
+        character = PlayerController.Instance.transform;
         camera = Camera.main.transform;
 
         //Initialize

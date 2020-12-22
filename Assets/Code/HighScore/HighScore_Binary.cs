@@ -2,9 +2,8 @@
 using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
 
-public static class HighScore
+public static class HighScore_Binary
 {
-    //Represent a string using a const to prevent typos
     const string FileName = "/PlayerHighScore.save";
 
     public static void SaveHighscore (int score)
@@ -29,31 +28,10 @@ public static class HighScore
 
             using (FileStream file = File.Open(Application.persistentDataPath + FileName, FileMode.Open))
             {
-                //Deserialization returns an Object type, so we have to manually cast it.
+                //Deserialization returns an Object type, we have to cast it.
                 highscore = (int)formatter.Deserialize(file);
             }
         }
-
         return highscore;
     }
 }
-
-
-/*
- public static class HighScore
-{
-    const string Key_HighScore = "HighScore";
-
-    public static void SaveHighscore (int score)
-    {
-        //Save to playerpref
-        PlayerPrefs.SetInt(Key_HighScore, score);
-    }
-
-    public static int LoadHighScore ()
-    {
-        //Load from player pref
-        return PlayerPrefs.GetInt(Key_HighScore, 0);
-    }
-}
- */

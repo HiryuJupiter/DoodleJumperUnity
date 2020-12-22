@@ -31,7 +31,7 @@ public class MainMenuManager : MonoBehaviour
         CanvasGroupUtil.RevealCanvasGroup(MainMenu);
 
         //Update highscore display
-        highscore = HighScore.LoadHighScore();
+        highscore = HighScore_PlayerPref.LoadHighScore();
         string paddedString = highscore.ToString().PadLeft(6, '0'); 
         highScore.text = paddedString;
     }
@@ -44,49 +44,47 @@ public class MainMenuManager : MonoBehaviour
     #endregion
 
     #region Public - UI button interactions
+    public void SetVisibility(bool reveal)
+    {
+    }
+
     public void StartGame ()
     {
         //Load the game
         SceneManager.LoadScene(SceneIndex_GamePlay);
     }
 
-    public void OpenOptionsMenu ()
+    public void Open_OptionsMenu ()
     {
-        //Hide the main menu and reveal the options menu
         CanvasGroupUtil.HideCanvasGroup(MainMenu);
         CanvasGroupUtil.RevealCanvasGroup(OptionsMenu);
     }
 
-    public void OpenAbout()
+    public void Open_AboutMenu()
     {
-        //Hide the main menu and reveal the options menu
         CanvasGroupUtil.HideCanvasGroup(MainMenu);
         CanvasGroupUtil.RevealCanvasGroup(AboutMenu);
     }
 
-    public void OptionsBackToMain ()
+    public void OptionsMenu_BackToMain ()
     {
-        //Hide the options menu and reveal the main menu
         CanvasGroupUtil.HideCanvasGroup(OptionsMenu);
         CanvasGroupUtil.RevealCanvasGroup(MainMenu);
     }
 
-    public void AboutBackToMain()
+    public void AboutMenu_BackToMain()
     {
-        //Hide the options menu and reveal the main menu
         CanvasGroupUtil.HideCanvasGroup(AboutMenu);
         CanvasGroupUtil.RevealCanvasGroup(MainMenu);
     }
 
     public void QuitGame()
     {
-        //Quits the game
         Application.Quit();
     }
 
     public void VolumnSliderUpdate(float value)
     {
-        //Set channel volumn inside the audio mixer
         SetMixerVolumn(value);
         SaveVolumnToPlayerPrefs(value);
     }
@@ -94,7 +92,6 @@ public class MainMenuManager : MonoBehaviour
 
     void LoadVolumnFromPlayerPrefs ()
     {
-        //Load volumn float from playerprefs and then update volumn slider without the value change callback
         float value = PlayerPrefs.GetFloat(Key_VolumnSliderValue, 1);
         volumnSlider.SetValueWithoutNotify(value);
         SetMixerVolumn(value);
@@ -107,7 +104,6 @@ public class MainMenuManager : MonoBehaviour
 
     void SetMixerVolumn (float value)
     {
-        //Convert linear slider value to a logarithmic value
         mixer.SetFloat(Key_VolumnSliderValue, Mathf.Log10(value) * 20); 
     }
 }

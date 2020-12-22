@@ -6,30 +6,66 @@ public class UIManager : MonoBehaviour
 {
     public static UIManager instance;
 
-    [SerializeField] Text highScore;
-    [SerializeField] GameObject gameOverScreen;
+    ScoreBoard scoreboard;
+    HUDManager hud;
+    MainMenuManager mainmenu;
 
+    #region MonoBehavior
     void Awake()
     {
-        //Lazy singleton
+        //Initialize
         instance = this;
 
-        //Hide unnecessary elements
-        gameOverScreen.SetActive(false);
+        //Ref
+        hud         = GetComponentInChildren<HUDManager>();
+        scoreboard  = GetComponentInChildren<ScoreBoard>();
+        mainmenu    = GetComponentInChildren<MainMenuManager>();
     }
 
-    public void GameOver(int currentScore)
+    void Start()
     {
-        //Hide unnecessary elements and show highscore
-        gameOverScreen.SetActive(true);
-
-        //Update score display
-        highScore.text = currentScore.ToString();
+        //Event subscribing
+        SceneEvents.PlayerDead.Event            += PlayerDead;
+        SceneEvents.GameStart.Event             += MainMenuClicksGameStart;
+        SceneEvents.GameOverBackToMain.Event    += GameOverBackToMain;
     }
 
-    public void SetCurrentScore (int score)
+    void OnDisable()
     {
-        //Display the highscore with some paddings to the left
-        highScore.text = score.ToString();
+        //Event unsubscribing
+        SceneEvents.PlayerDead.Event            -= PlayerDead;
+        SceneEvents.GameStart.Event             -= MainMenuClicksGameStart;
+        SceneEvents.GameOverBackToMain.Event    -= GameOverBackToMain;
     }
+    #endregion
+
+    //Public
+    public void SetCurrentScore(int score)
+    {
+        hud.SetCurrentScore(score);
+    }
+
+    //Private
+    void PlayerDead ()
+    {
+        scoreboard.SetVisibility(true);
+    }
+
+    void MainMenuClicksGameStart ()
+    {
+        mainmenu.SetVisibility(false);
+    }
+
+    void GameOverBackToMain ()
+    {
+        scoreboard.SetVisibility(false);
+        mainmenu.SetVisibility(true);
+    }
+
+    void RevealMainMenu()   => mainmenu.SetVisibility(true);
+    void HideMainMenu()     => mainmenu.SetVisibility(false);
+    void RevealScoreboard() => scoreboard.SetVisibility(true);
+    void HideScoreboard()   => scoreboard.SetVisibility(false);
+    void RevealHUD()        => hud.SetVisibility(true);
+    void HideHUD()          => hud.SetVisibility(false);
 }

@@ -1,19 +1,17 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-//Make this script execute earlier than other scripts
+//This class is referenced by other class's Awake
 [DefaultExecutionOrder(-1000)]
 public class InputManager : MonoBehaviour
 {
     public static InputManager Instance;
 
-    //Property - allows reading the value publically, but can only set it privately within this class
     public float MoveX { get ; private set; }
     public bool Jump { get; private set;}
 
     void Awake()
     {
-        //Lazy singleton
         Instance = this;
     }
 
@@ -25,7 +23,6 @@ public class InputManager : MonoBehaviour
 
     void UpdateMovement ()
     {
-        //Checking horizontal input. 
         if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow))
         {
             MoveX = -1;
