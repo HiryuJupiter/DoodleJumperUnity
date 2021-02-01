@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 74cac7bcc59b8ef42950b0e788633e4b, type: 3}
+  m_Name: Platform6a_BumperL
+  m_EditorClassIdentifier: 
+  pool:
+    prefab: {fileID: -8392937743838775291, guid: 256139bac267c5a4b9ca2c91aeb80dc8,
+      type: 3}
+  type: 0
+  objectYSize: 0
+  startingProbability: 0
+  endProbability: 0

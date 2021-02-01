@@ -5,24 +5,28 @@ using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
-    public static GameManager Instance;
+    //Event
+    public delegate void GameStartHandler();
+    public delegate void PlayerDeadHandler();
+    public delegate void ScoreBoardBackToMainHandler();
+
+    public static event GameStartHandler               OnGameStart;
+    public static event PlayerDeadHandler              OnGameOver;
+    public static event ScoreBoardBackToMainHandler    OnScoreboardBackToMain;
 
     //Consts
     const int SceneIndex_MainMenu = 0;
 
-    //Reference
-    UIManager ui;
-    CameraTracker cam;
-    Transform character;
+    //Variables
+    public static GameManager Instance;
 
-    //Status
+    UIManager ui;
+    Transform character;
 
     //Properties
     public static GameStates gameState { get; private set; } = GameStates.MainMenu;
-    public float playerHighestY { get; private set; }
-    public int TimeElapsed { get; private set; }
-    public int Coins { get; private set; }
-
+    public float currentScore { get; private set; }
+    
 
     #region MonoBehavior
     void Awake()
@@ -34,57 +38,43 @@ public class GameManager : MonoBehaviour
     {
         //Reference
         ui = UIManager.instance;
-        cam = CameraTracker.Instance;
         character = PlayerController.Instance.transform;
-
-        EventSubscribing();
     }
 
     void Update()
     {
-        //Constantly check if character has reached a higher position
-        UpdateHighestCharacterPosition();
+        switch (gameState)
+        {
+            case GameStates.MainMenu:
+                break;
+            case GameStates.Gameplay:   UpdateHighestCharacterPosition();
+                break;
+            case GameStates.Scoreboard:
+                break;
+        }
+    }
+
+    void OnGUI()
+    {
+        GUI.Label(new Rect(20, 300, 500, 50), "gameState: " + gameState, GameSettings.GuiStyle);
     }
     #endregion
 
     #region Public 
-    public void GameLost()
-    {
-        if (playerHighestY > CurrentHighscore)
-        {
-            HighScore_PlayerPref.SaveHighscore((int)playerHighestY);
-        }
-    }
-
-    public void ReturnToMainMenu()
-    {
-        SceneManager.LoadScene(SceneIndex_MainMenu);
-    }
-
-    public void ReplayGame()
-    {
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-    }
-    #endregion
-
-    void Reset()
-    {
-        gameState = GameStates.MainMenu;
-        playerHighestY = 0;
-    }
-
-    #region Game start
-    void GameStart()
+    public void GameStart()
     {
         gameState = GameStates.Gameplay;
-        StartCoroutine(DelayedStartRunning());
+        currentScore = 0;
+
+        OnGameStart?.Invoke();
     }
 
-    IEnumerator DelayedStartRunning()
+    public void PlayerDead()
     {
-        yield return new WaitForSeconds(1f);
-        SceneEvents.GameStart.InvokeEvent();
+        StartCoroutine(ShowScoreBoard());
     }
+
+    
     #endregion
 
     #region Private 
@@ -92,27 +82,39 @@ public class GameManager : MonoBehaviour
 
     void UpdateHighestCharacterPosition()
     {
-        if (character.position.y > playerHighestY)
+        if (character.position.y > currentScore)
         {
-            playerHighestY = character.position.y;
-            ui.SetCurrentScore((int)playerHighestY);
-            cam.SetCameraPositionY(playerHighestY);
+            currentScore = character.position.y;
+            ui.SetCurrentScore((int)currentScore);
         }
     }
     #endregion
 
     #region Minor Methods
-    void EventSubscribing()
+    IEnumerator ShowScoreBoard ()
     {
-        SceneEvents.PlayerDead.Event += GameLost;
+        gameState = GameStates.Scoreboard;
+        SaveHighScoreToPlayerPref();
+
+        OnGameOver?.Invoke();
+
+        yield return new WaitForSeconds(1.5f);
+        ScoreBoardBackToMain();
     }
 
-    void OnDisable()
+    void ScoreBoardBackToMain()
     {
-        //Event unsubscribing
-        SceneEvents.PlayerDead.Event -= GameLost;
+        gameState = GameStates.MainMenu;
+        currentScore = 0;
+        OnScoreboardBackToMain?.Invoke();
     }
 
-    void GameOverBackToMain() => gameState = GameStates.MainMenu;
+    void SaveHighScoreToPlayerPref ()
+    {
+        if (currentScore > CurrentHighscore)
+        {
+            HighScore_PlayerPref.SaveHighscore((int)currentScore);
+        }
+    }
     #endregion
 }

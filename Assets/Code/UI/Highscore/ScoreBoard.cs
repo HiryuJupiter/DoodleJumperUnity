@@ -2,12 +2,13 @@
 using System.Collections;
 
 [RequireComponent(typeof(ScoreboardHighscoreText))]
-public class ScoreBoard : MonoBehaviour
+public class Scoreboard : MonoBehaviour
 {
     [SerializeField] GameObject anyKeyToQuit;
+    [SerializeField] CanvasGroup canvasGroup;
 
     ScoreboardHighscoreText highscore;
-    CanvasGroup cvs;
+    GameManager gm;
 
     bool waitingToQuit = false;
 
@@ -16,59 +17,64 @@ public class ScoreBoard : MonoBehaviour
     {
         //Reference
         highscore = GetComponent<ScoreboardHighscoreText>();
-        cvs = GetComponent<CanvasGroup>();
 
         //Initialize
-        CanvasGroupHelper.InstantHide(cvs);
+        CanvasGroupHelper.InstantHide(canvasGroup);
         anyKeyToQuit.SetActive(false);
+    }
+
+    void Start()
+    {
+        gm = GameManager.Instance;
     }
     #endregion
 
     #region Public
-    public void SetVisibility(bool reveal)
+    public void Open ()
     {
+        StartCoroutine(OpenScoreboard());
+        OpenScoreboard();
     }
 
-    public void ToReplayGame ()
+    public void Close ()
     {
-        SceneEvents.GameStart.InvokeEvent();
-    }
-
-    public void ToMainMenu ()
-    {
-        SceneEvents.GameOverBackToMain.InvokeEvent();
+        CloseScoreboard();
     }
     #endregion
 
     #region Canvas visibility
-    void RevealCanvas()
+    IEnumerator OpenScoreboard()
     {
-        StartCoroutine(CanvasGroupHelper.FadeInCoroutine(cvs, 0.1f));
-        StartCoroutine(WaitForAnykeyToQuit());
+        StartCoroutine(CanvasGroupHelper.FadeInCoroutine(canvasGroup, 0.1f));
+        yield return new WaitForSeconds(0.2f);
+
+        highscore.DisplayHighscore((int)gm.currentScore);
+
+        //StartCoroutine(WaitForAnykeyToQuit());
     }
 
-    void HideCanvas()
+    //IEnumerator WaitForAnykeyToQuit ()
+    //{
+    //    yield return new WaitForSeconds(2f);
+
+    //    anyKeyToQuit.SetActive(true);
+    //    waitingToQuit = true;
+
+    //    while (waitingToQuit)
+    //    {
+    //        if (Input.anyKey)
+    //        {
+    //            gm.ScoreBoardBackToMain();
+    //            waitingToQuit = false;
+    //        }
+    //        yield return null;
+    //    }
+    //}
+
+    void CloseScoreboard()
     {
-        StartCoroutine(CanvasGroupHelper.FadeOutCoroutine(cvs, 0.1f));
+        StartCoroutine(CanvasGroupHelper.FadeOutCoroutine(canvasGroup, 0.1f));
         anyKeyToQuit.SetActive(false);
-    }
-    #endregion
-
-    #region WaitForKey
-    IEnumerator WaitForAnykeyToQuit ()
-    {
-        yield return new WaitForSeconds(2f);
-        anyKeyToQuit.SetActive(true);
-        waitingToQuit = true;
-        while (waitingToQuit)
-        {
-            if (Input.anyKey)
-            {
-                ToMainMenu();
-                waitingToQuit = false;
-            }
-            yield return null;
-        }
     }
     #endregion
 }

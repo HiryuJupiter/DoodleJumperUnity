@@ -1,64 +1,77 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody2D))]
+[RequireComponent(typeof(RigidbodyVerticalRaycaster))]
 public class PlayerController : MonoBehaviour
 {
     public static PlayerController Instance;
 
-    [HideInInspector] public Vector2 velocity = Vector2.zero;
-
-   
-
     //Reference
     Rigidbody2D rb;
-    CameraTracker cam;
-    GameManager gameManager;
-    CharacterSettings settings;
+    GameManager gm;
+    GameSettings settings;
     PlayerFeedbacks feedback;
+    RigidbodyVerticalRaycaster raycaster;
 
-    //Status
+    //States machine
     Dictionary<PlayerStates, PlayerStateBase> stateClassLookup;
     PlayerStates currentStateType;
     PlayerStateBase currentStateClass;
 
+    //Cache
+    Vector2 startingPosition;
+
     //Properties
-    bool Falling => velocity.y < 0;
+    public PlayerStatus Status { get; private set; } = new PlayerStatus();
+    bool IsPlayerActive => currentStateType != PlayerStates.Inactive;
 
     #region MonoBehavior
-    void Awake()
+    private void Awake()
     {
         //Lazy singleton
         Instance = this;
 
         //Reference
-        rb          = GetComponent<Rigidbody2D>();
-        feedback    = GetComponentInChildren<PlayerFeedbacks>();
+        rb = GetComponent<Rigidbody2D>();
+        feedback = GetComponentInChildren<PlayerFeedbacks>();
+        raycaster = GetComponent<RigidbodyVerticalRaycaster>();
 
         //Initialize
         stateClassLookup = new Dictionary<PlayerStates, PlayerStateBase>
         {
-            {PlayerStates.Inactive,     new State_Inactive      (this, feedback)},
-            {PlayerStates.Jumping,      new State_Jumping       (this, feedback)},
-            {PlayerStates.Slamming,     new State_Slamming      (this, feedback)},
-            {PlayerStates.Dashing,      new State_Dashing       (this, feedback)},
-            {PlayerStates.Rocketing,    new State_Rocketing     (this, feedback)},
-            {PlayerStates.Balooning,    new State_Ballooning    (this, feedback)},
+            {PlayerStates.Inactive,         new State_Inactive          (this, feedback)},
+            {PlayerStates.Jumping,          new State_Jumping           (this, feedback)},
+            {PlayerStates.LinearTranslate,  new State_LinearTranslate   (this, feedback)},
+            {PlayerStates.Spinning,         new State_SpinnerSpin       (this, feedback)},
         };
 
-        currentStateType    = PlayerStates.Inactive;
-        currentStateClass   = stateClassLookup[currentStateType];
+        currentStateType = PlayerStates.Inactive;
+        currentStateClass = stateClassLookup[currentStateType];
+        currentStateClass.StateEntry();
+
+        feedback.SetCharacterVisibility(false);
+
+        //Cache
+        startingPosition = transform.position;
     }
 
     void Start()
     {
         //Reference
-        cam             = CameraTracker.Instance;
-        gameManager     = GameManager.Instance;
-        settings        = CharacterSettings.Instance;
+        gm = GameManager.Instance;
+        settings = GameSettings.Instance;
 
-        EventSubscribing();
+        GameManager.OnGameStart += GameStarts;
+        GameManager.OnGameOver += GameOver;
+    }
+
+    void OnDisable()
+    {
+        GameManager.OnGameStart -= GameStarts;
+        GameManager.OnGameOver -= GameOver;
     }
 
     void Update()
@@ -70,36 +83,50 @@ public class PlayerController : MonoBehaviour
     {
         currentStateClass?.TickFixedUpdate();
 
-        if (currentStateType != PlayerStates.Inactive)
+        if (IsPlayerActive)
         {
+            Status.TimerUpdate();
+            raycaster.CheckForCollidersBeneath(RaycastFoundColliderBelow);
+
             CheckIfFallenToDeath();
+
             ExecuteMovement();
         }
     }
 
-    void OnTriggerStay2D(Collider2D collider)
+    void OnTriggerStay2D(Collider2D col)
     {
-        if (Falling && HitsInteractableObject(collider))
+        if (IsColliderInteractableObject(col))
         {
-            feedback.Play_LandsOnPlatform();
-            collider.GetComponent<Interactable>().PlayerCollisionEffect(this);
+            Interactable other = col.GetComponent<Interactable>();
+            InteractableTypes type = other.InteractableType;
+            switch (type)
+            {
+                case InteractableTypes.Platform:
+                    HitsPlatform(other);
+                    break;
+                case InteractableTypes.LinearTranslator:
+                    HitsLinearTranslator(other);
+                    break;
+                case InteractableTypes.Spinner:
+                    HitsSpinner(other);
+                    break;
+                case InteractableTypes.Gem:
+                    HitsGem(other);
+                    break;
+            }
         }
     }
 
-    void OnDisable() => EventUnsubscribing();
-    #endregion
-
-    #region Gameplay events
-    void CheckIfFallenToDeath()
+    void OnGUI()
     {
-        if (transform.position.y < cam.BottomOfScreen)
-        {
-            SceneEvents.PlayerDead.InvokeEvent();
-        }
+        GUI.Label(new Rect(20, 50, 500, 50), "Player state : " + currentStateType, GameSettings.GuiStyle);
+        GUI.Label(new Rect(20, 100, 500, 50), "rb.velocity : " + rb.velocity, GameSettings.GuiStyle);
+        GUI.Label(new Rect(20, 150, 500, 50), "position : " + transform.position, GameSettings.GuiStyle);
     }
     #endregion
 
-    #region State machine
+    #region Public
     public void SwitchToNewState(PlayerStates newState)
     {
         if (currentStateType != newState)
@@ -113,24 +140,70 @@ public class PlayerController : MonoBehaviour
     }
     #endregion
 
+    #region Collision with interactables
+    void RaycastFoundColliderBelow(Collider2D col)
+    {
+        if (IsColliderInteractableObject(col))
+        {
+            Interactable other = col.GetComponent<Interactable>();
+            if (other.InteractableType == InteractableTypes.Platform)
+            {
+                HitsPlatform(other);
+            }
+        }
+    }
+
+    void HitsPlatform(Interactable platform)
+    {
+        if (!Status.IsPlatformRecentlyHit(platform))
+        {
+            Status.SetRecentlyHitPlatform(platform);
+            SwitchToNewState(PlayerStates.Jumping);
+            currentStateClass?.HitsInteractable(platform);
+        }
+    }
+
+    void HitsLinearTranslator(Interactable translator)
+    {
+        SwitchToNewState(PlayerStates.LinearTranslate);
+        currentStateClass?.HitsInteractable(translator);
+    }
+
+    void HitsSpinner(Interactable spinner)
+    {
+        if (!Status.IsSpinnerRecentlyHit(spinner))
+        {
+            Status.SetRecentlyHitSpinner(spinner);
+            SwitchToNewState(PlayerStates.Spinning);
+            currentStateClass?.HitsInteractable(spinner);
+        }
+    }
+
+    void HitsGem(Interactable other)
+    {
+
+    }
+    #endregion
+
     #region Minor Methods
-    void EventSubscribing()
+    void GameStarts()
     {
-        SceneEvents.GameStart.Event += GameStarts;
+        ResetPosition();
+        SwitchToNewState(PlayerStates.Jumping);
     }
 
-    void EventUnsubscribing ()
+    void CheckIfFallenToDeath()
     {
-        SceneEvents.GameStart.Event -= GameStarts;
+        if (transform.position.y < CameraTracker.BottomOfScreen - 1f)
+        {
+            Debug.Log("Fallen to death. Player position " + transform.position + ", camera bottom = " + CameraTracker.BottomOfScreen);
+            gm.PlayerDead();
+        }
     }
-    public void GameStarts()        => SwitchToNewState(PlayerStates.Jumping);
-    public void Dashing()           => SwitchToNewState(PlayerStates.Dashing);
-    public void PicksUpRocket()     => SwitchToNewState(PlayerStates.Rocketing);
-    public void PicksUpBalloon()    => SwitchToNewState(PlayerStates.Balooning);
-    public void PlayerDead()        => SwitchToNewState(PlayerStates.Inactive);
 
-    void ExecuteMovement() => rb.velocity = velocity;
-    bool HitsInteractableObject(Collider2D collider) => settings.InteractableLayer == (settings.InteractableLayer | 1 << collider.gameObject.layer);
-    
+    void ResetPosition() => transform.position = startingPosition;
+    void GameOver() => SwitchToNewState(PlayerStates.Inactive);
+    void ExecuteMovement() => rb.velocity = Status.Velocity;
+    bool IsColliderInteractableObject(Collider2D collider) => settings.InteractableLayer == (settings.InteractableLayer | 1 << collider.gameObject.layer);
     #endregion
 }

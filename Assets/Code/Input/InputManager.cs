@@ -9,6 +9,7 @@ public class InputManager : MonoBehaviour
 
     public float MoveX { get ; private set; }
     public bool Jump { get; private set;}
+    public bool PressedMoveKey => MoveX != 0;
 
     void Awake()
     {
@@ -17,11 +18,11 @@ public class InputManager : MonoBehaviour
 
     void Update()
     {
-        UpdateMovement();
+        UpdateHorizontal();
         UpdateJump ();
     }
 
-    void UpdateMovement ()
+    void UpdateHorizontal ()
     {
         if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow))
         {

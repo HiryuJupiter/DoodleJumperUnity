@@ -14,13 +14,19 @@ public class CameraController : MonoBehaviour
         anim_zoomOut = Animator.StringToHash("ZoomOut");
 
         animator = GetComponent<Animator>();
-        EventSubscription();
+
+        //Events
+        GameManager.OnGameStart += ZoomOut;
+        GameManager.OnScoreboardBackToMain += ZoomIn;
+
     }
 
-    void Update()
+    void OnDisable()
     {
-        
+        GameManager.OnGameStart -= ZoomOut;
+        GameManager.OnScoreboardBackToMain -= ZoomIn;
     }
+
 
     void ZoomOut()
     {
@@ -31,18 +37,4 @@ public class CameraController : MonoBehaviour
     {
         animator.Play(anim_zoomIn);
     }
-
-    #region Scene events subscription
-    void EventSubscription ()
-    {
-        SceneEvents.GameStart.Event += ZoomOut;
-        SceneEvents.GameOverBackToMain.Event += ZoomIn;
-    }
-
-    void OnDisable()
-    {
-        SceneEvents.PlayerDead.Event -= ZoomIn;
-        SceneEvents.GameOverBackToMain.Event -= ZoomOut;
-    }
-    #endregion
 }

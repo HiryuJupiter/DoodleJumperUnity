@@ -6,9 +6,11 @@ public class UIManager : MonoBehaviour
 {
     public static UIManager instance;
 
-    ScoreBoard scoreboard;
-    HUDManager hud;
+    GameManager gm;
+
     MainMenuManager mainmenu;
+    HUDManager hud;
+    Scoreboard scoreboard;
 
     #region MonoBehavior
     void Awake()
@@ -17,55 +19,61 @@ public class UIManager : MonoBehaviour
         instance = this;
 
         //Ref
-        hud         = GetComponentInChildren<HUDManager>();
-        scoreboard  = GetComponentInChildren<ScoreBoard>();
+        gm = GameManager.Instance;
+
         mainmenu    = GetComponentInChildren<MainMenuManager>();
+        hud         = GetComponentInChildren<HUDManager>();
+        scoreboard  = GetComponentInChildren<Scoreboard>();
     }
 
     void Start()
     {
-        //Event subscribing
-        SceneEvents.PlayerDead.Event            += PlayerDead;
-        SceneEvents.GameStart.Event             += MainMenuClicksGameStart;
-        SceneEvents.GameOverBackToMain.Event    += GameOverBackToMain;
+        GameManager.OnGameStart             += GameStart;
+        GameManager.OnGameOver              += GameOver;
+        GameManager.OnScoreboardBackToMain  += ScoreboardBackToMain;
     }
 
     void OnDisable()
     {
-        //Event unsubscribing
-        SceneEvents.PlayerDead.Event            -= PlayerDead;
-        SceneEvents.GameStart.Event             -= MainMenuClicksGameStart;
-        SceneEvents.GameOverBackToMain.Event    -= GameOverBackToMain;
+        GameManager.OnGameStart             -= GameStart;
+        GameManager.OnGameOver              -= GameOver;
+        GameManager.OnScoreboardBackToMain  -= ScoreboardBackToMain;
     }
     #endregion
 
-    //Public
+    #region Public
     public void SetCurrentScore(int score)
     {
-        hud.SetCurrentScore(score);
+        hud.SetDistanceScore(score);
     }
+    #endregion
 
-    //Private
-    void PlayerDead ()
+    #region Private
+    void GameStart()
     {
-        scoreboard.SetVisibility(true);
+        HideMainMenu();
+        RevealHUD();
     }
 
-    void MainMenuClicksGameStart ()
+    void GameOver()
     {
-        mainmenu.SetVisibility(false);
+        RevealScoreboard();
+        HideHUD();
     }
 
-    void GameOverBackToMain ()
+    void ScoreboardBackToMain()
     {
-        scoreboard.SetVisibility(false);
-        mainmenu.SetVisibility(true);
+        RevealMainMenu();
+        HideScoreboard();
     }
+    #endregion
 
-    void RevealMainMenu()   => mainmenu.SetVisibility(true);
-    void HideMainMenu()     => mainmenu.SetVisibility(false);
-    void RevealScoreboard() => scoreboard.SetVisibility(true);
-    void HideScoreboard()   => scoreboard.SetVisibility(false);
-    void RevealHUD()        => hud.SetVisibility(true);
-    void HideHUD()          => hud.SetVisibility(false);
+    #region Minor
+    void RevealMainMenu() => mainmenu.OpenRootMenu();
+    void HideMainMenu() => mainmenu.CloseRootMenu();
+    void RevealScoreboard() => scoreboard.Open();
+    void HideScoreboard() => scoreboard.Close();
+    void RevealHUD() => hud.SetVisibility(true);
+    void HideHUD() => hud.SetVisibility(false);
+    #endregion
 }

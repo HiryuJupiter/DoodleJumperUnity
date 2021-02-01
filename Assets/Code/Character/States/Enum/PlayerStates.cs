@@ -2,8 +2,9 @@
 {
     Inactive, 
     Jumping,
-    Slamming,
-    Dashing,
-    Rocketing,
-    Balooning,
+    LinearTranslate,
+    Spinning,
+    //Dashing,
+    //Rocketing,
+    //Balooning,
 }

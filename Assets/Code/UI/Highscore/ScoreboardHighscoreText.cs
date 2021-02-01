@@ -6,7 +6,7 @@ public class ScoreboardHighscoreText : MonoBehaviour
 {
     [SerializeField] Text highscoreText;
 
-    int highscore;
+    private int highscore;
 
     public void DisplayHighscore (int score)
     {
